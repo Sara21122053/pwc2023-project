@@ -38,7 +38,7 @@ class Program
         {
             if (number > max)
             {
-                max = data;
+                max = number;
             }
         }
         Console.WriteLine($"The max is: {max}");
