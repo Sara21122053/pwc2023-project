@@ -34,9 +34,9 @@ class Program
         Console.WriteLine($"The average is: {average}");
 
         int max = numbers [0];
-        foreach (int data in numbers)
+        foreach (int number in numbers)
         {
-            if (data > max)
+            if (number > max)
             {
                 max = data;
             }
