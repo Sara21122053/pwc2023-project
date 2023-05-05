@@ -4,7 +4,7 @@ class Program
 {
     static void Main(string[] args)
     {
-        Console.WriteLine("Resume Lucia de la Cruz");
+        Console.WriteLine("Resume");
 
         Job job1 = new Job();
         job1._jobTitule = "Ballerina";
