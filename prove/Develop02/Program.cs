@@ -2,101 +2,65 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Threading;
-public class Questions
+
+class Program
 {
-    private List<Answers> entries = new List<Answers>();
-    private string multimediaFolder = "Multimedia";
-
-    public void Write()
+    static void Main(string[] args)
     {
-        Random rnd = new Random();
-        string[] query = {"What have you learned today?", "What places did you visit?", "What was the best part of your day?", "What did you do in your free time?", "How did you feel today? Why?", "What would you like to do tomorrow?", "Which wish would you like to make today?"};
-        int queryIndex = rnd.Next(query.Length);
-        Console.WriteLine(query[queryIndex]);
-        string answer = Console.ReadLine();
+        Console.WriteLine("Hello! Welcome to your personal journal");
 
-        entries.Add(new Answers() {questions = query[queryIndex], answers = answer, dateText = DateTime.Now});
-    }
+        Questions journal = new Questions();
 
-    public void Show()
-    {
-        foreach (Answers entry in entries)
+        int options = -1;
+
+        SetAlarm();
+
+        while (options != 6)
         {
-            Console.WriteLine("Date: {0}\n Question: {1}\n Answer: {2}", entry.dateText, entry.questions, entry.answers);
-            
-            Console.WriteLine("Multimedia files");
-            foreach(string file in entry.multimediaFiles)
-            {
-                Console.WriteLine(file);
-            }
-            Console.WriteLine("------------------------");
-        }
-    }
+            Console.WriteLine("How can I help you?\n 1.Write\n 2.Save\n 3.Load\n 4.Show\n 5.Load multimedia\n 6.Close");
+            options = int.Parse(Console.ReadLine());
 
-    public void Save()
-    {
-        Console.WriteLine("Enter the name of the file to save the journal");
-        string fileName = Console.ReadLine();
-
-        using (StreamWriter file = new StreamWriter(fileName))
-        {
-            foreach (Answers entry in entries)
+            switch (options)
             {
-                file.WriteLine("{0}; {1}; {2}", entry.dateText, entry.questions, entry.answers);
-            }
-        }
-    }
-
-    public void Load()
-    {
-        Console.WriteLine("Enter the name of the file to load the journal");
-        string fileName = Console.ReadLine();
-        entries.Clear();
-        
-        using (StreamReader file = new StreamReader(fileName))
-        {
-            string line;
-            while((line = file.ReadLine()) != null)
-            {
-                string [] content = line.Split(';');
-                Answers entry = new Answers() {dateText = DateTime.Parse(content[0]), questions = content[1], answers = content[2]};
-                
-                entries.Add(entry); 
+                case 1:
+                    journal.Write();
+                    break;
+                case 2:
+                    journal.Save();
+                    break;
+                case 3:
+                    journal.Load();
+                    break;
+                case 4:
+                    journal.Show();
+                    break;
+                case 5:
+                    journal.LoadMultimedia();
+                    break;   
+                case 6:
+                    Console.WriteLine("Thank you for talking to me. I wish you a great day!");
+                    break;
+                default:
+                    Console.WriteLine("Invalid option. Please select a number from 1 to 5.");
+                    break;
             }
         }
     }
 
-    public void LoadMultimedia()
+    static void SetAlarm()
     {
-        Console.WriteLine("Enter the index of the entry to load multimedia files");
-        int index = int.Parse(Console.ReadLine()) - 1;
-
-        if (index < 0 || index >= entries.Count)
+        DateTime now = DateTime.Now;
+        DateTime nextAlarm = new DateTime(now.Year, now.Month, now.Day, 8, 0, 0);
+        if (nextAlarm < now)
         {
-            Console.WriteLine("Invalid index");
-            return;
+            nextAlarm = nextAlarm.AddDays(1);
         }
 
-        Console.WriteLine("Enter the name of the multimedia file (including the extension) or 'q' to finish");
+        TimeSpan timeUntilNextAlarm = nextAlarm - now;
 
-        while (true)
+        Timer timer = new Timer(_ =>
         {
-            string fileName = Console.ReadLine();
-            if (fileName == "q")
-            {
-                break;
-            }
-
-            string sourceFilePath = Path.Combine(multimediaFolder, fileName);
-            if (!File.Exists(sourceFilePath))
-            {
-                Console.WriteLine("The file does not exist");
-                continue;
-            }
-
-            string destFilePath = Path.Combine(multimediaFolder, entries[index].dateText.ToString("yyyy-MM-ddTHHmmss") + "_" + fileName);
-            File.Copy(sourceFilePath, destFilePath, true);
-            entries[index].multimediaFiles.Add(destFilePath);
-        }
+            Console.WriteLine("Reminder: Don't forget to make a journal entry today!");
+        }, null, timeUntilNextAlarm, TimeSpan.FromDays(1));
     }
 }
