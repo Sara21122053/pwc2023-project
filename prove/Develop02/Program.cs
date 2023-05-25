@@ -17,7 +17,7 @@ class Program
 
         while (options != 6)
         {
-            Console.WriteLine("How can I help you?\n 1.Write\n 2.Save\n 3.Load\n 4.Show\n 5.Load multimedia\n 6.Close");
+            Console.WriteLine("How can I help you?\n 1.Write\n 2.Save\n 3.Load\n 4.Display\n 5.Load multimedia\n 6.Quit");
             options = int.Parse(Console.ReadLine());
 
             switch (options)
