@@ -4,8 +4,8 @@ using System.IO;
 
 public class Journal
 {
-    private List<Entry> entries = new List<Entry>();
-    private string multimediaFolder = "Multimedia";
+    private List<Entry> _entries = new List<Entry>();
+    private string _multimediaFolder = "Multimedia";
 
     public void Write()
     {
@@ -15,12 +15,12 @@ public class Journal
         Console.WriteLine(query[queryIndex]);
         string answer = Console.ReadLine();
 
-        entries.Add(new Entry() {_questions = query[queryIndex], _entries = answer, _dateText = DateTime.Now});
+        _entries.Add(new Entry() {_questions = query[queryIndex], _entries = answer, _dateText = DateTime.Now});
     }
 
     public void Display()
     {
-        foreach (Entry entry in entries)
+        foreach (Entry entry in _entries)
         {
             Console.WriteLine("Date: {0}\n Question: {1}\n Entry: {2}", entry._dateText, entry._questions, entry._entries);
             
@@ -40,7 +40,7 @@ public class Journal
 
         using (StreamWriter file = new StreamWriter(fileName))
         {
-            foreach (Entry entry in entries)
+            foreach (Entry entry in _entries)
             {
                 file.WriteLine("{0}; {1}; {2}", entry._dateText, entry._questions, entry._entries);
             }
@@ -51,7 +51,7 @@ public class Journal
     {
         Console.WriteLine("Enter the name of the file to load the journal");
         string fileName = Console.ReadLine();
-        entries.Clear();
+        _entries.Clear();
         
         using (StreamReader file = new StreamReader(fileName))
         {
@@ -61,7 +61,7 @@ public class Journal
                 string [] content = line.Split(';');
                 Entry entry = new Entry() {_dateText = DateTime.Parse(content[0]), _questions = content[1], _entries = content[2]};
                 
-                entries.Add(entry); 
+                _entries.Add(entry); 
             }
         }
     }
@@ -71,7 +71,7 @@ public class Journal
         Console.WriteLine("Enter the index of the entry to load multimedia files");
         int index = int.Parse(Console.ReadLine()) - 1;
 
-        if (index < 0 || index >= entries.Count)
+        if (index < 0 || index >= _entries.Count)
         {
             Console.WriteLine("Invalid index");
             return;
@@ -87,16 +87,16 @@ public class Journal
                 break;
             }
 
-            string sourceFilePath = Path.Combine(multimediaFolder, fileName);
+            string sourceFilePath = Path.Combine(_multimediaFolder, fileName);
             if (!File.Exists(sourceFilePath))
             {
                 Console.WriteLine("The file does not exist");
                 continue;
             }
 
-            string destFilePath = Path.Combine(multimediaFolder, entries[index]._dateText.ToString("yyyy-MM-ddTHHmmss") + "_" + fileName);
+            string destFilePath = Path.Combine(_multimediaFolder, _entries[index]._dateText.ToString("yyyy-MM-ddTHHmmss") + "_" + fileName);
             File.Copy(sourceFilePath, destFilePath, true);
-            entries[index]._multimediaFiles.Add(destFilePath);
+            _entries[index]._multimediaFiles.Add(destFilePath);
         }
     }
 }
