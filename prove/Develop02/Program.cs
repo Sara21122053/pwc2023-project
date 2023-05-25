@@ -9,7 +9,7 @@ class Program
     {
         Console.WriteLine("Hello! Welcome to your personal journal");
 
-        Questions journal = new Questions();
+        Journal journal = new Journal();
 
         int options = -1;
 
@@ -32,7 +32,7 @@ class Program
                     journal.Load();
                     break;
                 case 4:
-                    journal.Show();
+                    journal.Display();
                     break;
                 case 5:
                     journal.LoadMultimedia();
