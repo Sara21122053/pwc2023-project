@@ -1,11 +1,11 @@
 using System;
 
-public class World
+public class Word
 {
     private string _Text;
     private bool _Hide;
 
-    public World (string text)
+    public Word (string text)
     {
         _Text = text;
         _Hide = false;
