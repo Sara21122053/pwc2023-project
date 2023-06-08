@@ -41,34 +41,86 @@ class Program
 
     static void DisplayAnExistingScripture()
     {
-        if (scriptureLibrary.Count == 0)
+        Console.Clear();
+        
+        string filePath = "Scriptures.txt";
+        
+        if (!File.Exists(filePath))
         {
-            Console.WriteLine("There aren't scriptures in library. Press any key to continue.");
+            Console.WriteLine("The Scriptures file does not exist. Press any key to continue.");
             Console.ReadKey();
             return;
         }
-
-        Scripture scripture = scriptureLibrary[random.Next(scriptureLibrary.Count)];
-        Console.Clear();
-
-        Console.WriteLine(scripture.Reference);
-        Console.WriteLine(scripture.Text);
-        Console.WriteLine(scripture.Image);
-
-        Console.WriteLine("Press Enter to hide words or type 'quit' to retur to the main menu");
-        string option = Console.ReadLine();
-
-        if (option.ToLower() == "quit")
+        
+        string[] lines = File.ReadAllLines(filePath);
+        
+        if (lines.Length == 0)
+        {
+            Console.WriteLine("There are no scriptures in the file. Press any key to continue.");
+            Console.ReadKey();
             return;
+        }
+        
+        Random random = new Random();
+        int randomIndex = random.Next(lines.Length);
+        string scriptureLine = lines[randomIndex];
+        
+        string[] data = scriptureLine.Split('|');
+        
+        if (data.Length == 3)
+        {
+            string reference = data[0];
+            string text = data[1];
+            string image = data[2];
+            
+            string[] referenceParts = reference.Split(' ');
+            
+            string book = referenceParts[0];
+            string[] chapterVerseParts = referenceParts[1].Split(':');
+            int chapter = int.Parse(chapterVerseParts[0]);
 
-        HideWords(scripture);
+            string[] verseParts = chapterVerseParts[1].Split('-');
+            int initialVerse = int.Parse(verseParts[0]);
+            int finalVerse = verseParts.Length > 1 ? int.Parse(verseParts[1]) : 0;
+            
+            Reference scriptureReference = new Reference(book, chapter, initialVerse, finalVerse);
+            Scripture scripture = new Scripture(scriptureReference, text, image);
+            
+            Console.WriteLine(scripture.Reference);
+            Console.WriteLine(scripture.Text);
+            Console.WriteLine(scripture.Image);
+            
+            Console.WriteLine("Press Enter to hide words or type 'quit' to return to the main menu");
+            string option = Console.ReadLine();
+            
+            if (option.ToLower() == "quit")
+                return;
+            
+            HideWords(scripture);
+        }
     }
 
     static void LoadNewScripture()
     {
         Console.Clear();
-        Console.WriteLine("Enter the reference:");
-        string reference = Console.ReadLine();
+        Console.WriteLine("Enter the book:");
+        string book = Console.ReadLine();
+
+        Console.WriteLine("Enter the chaper:");
+        string chap = Console.ReadLine();
+        int chapter = int.Parse(chap);
+
+        Console.WriteLine("Enter the initial verse:");
+        string iniVer = Console.ReadLine();
+        int initialVerse = int.Parse(iniVer);
+
+        Console.WriteLine("Enter the final verse (leave empty if there is only one verse):");
+        string finVer = Console.ReadLine();
+        int finalVerse = 0;
+        if (!string.IsNullOrEmpty(finVer))
+        {
+            finalVerse = int.Parse(finVer);
+        }
 
         Console.WriteLine("Enter the text:");
         string text = Console.ReadLine();
@@ -76,12 +128,33 @@ class Program
         Console.WriteLine("Enter the image:");
         string image = Console.ReadLine();
 
-        Reference newReference = new Reference(reference);
+        Reference newReference = new Reference(book, chapter, initialVerse, finalVerse);
         Scripture newScripture = new Scripture(newReference, text, image);
         scriptureLibrary.Add(newScripture);
 
+        SaveScriptureToFile(newScripture);
+
         Console.WriteLine("Scripture added successfuly. Press any key to continue");
         Console.ReadKey();
+    }
+    
+    static void SaveScriptureToFile(Scripture scripture)
+    {
+        string filePath = "Scriptures.txt";
+
+        using (StreamWriter writer = new StreamWriter(filePath, true))
+        {
+            string referenceString = scripture.Reference.ToString();
+            string[] referenceParts = referenceString.Split(' ');
+            
+            string book = referenceParts[0];
+            int chapter = int.Parse(referenceParts[1].Replace(":", ""));
+            int initialVerse = int.Parse(referenceParts[2]);
+            int finalVerse = referenceParts.Length >= 5 ? int.Parse(referenceParts[4]) : 0;
+
+            string formattedReference = finalVerse != 0 ? $"{book} {chapter}:{initialVerse}-{finalVerse}" : $"{book} {chapter}:{initialVerse}";
+            writer.WriteLine($"{formattedReference}|{scripture.Text}|{scripture.Image}");
+        }
     }
 
     static void HideWords(Scripture scripture)
@@ -157,9 +230,23 @@ class Program
                 string text = data[1];
                 string image = data[2];
 
-                Reference newReference = new Reference(reference);
-                Scripture newScripture = new Scripture(newReference, text, image);
-                scriptureLibrary.Add(newScripture);
+                string[] referenceParts = reference.Split(' ');
+                if (referenceParts.Length >= 3)
+                {
+                    string book = referenceParts[0];
+                    int chapter = int.Parse(referenceParts[1].Replace(":",""));
+                    int initialVerse = int.Parse(referenceParts[2]);
+                    
+                    int finalVerse = 0;
+                    if (referenceParts.Length >= 5)
+                    {
+                        finalVerse = int.Parse(referenceParts[4]);
+                    }
+
+                    Reference newReference = new Reference(book, chapter, initialVerse, finalVerse);
+                    Scripture newScripture = new Scripture(newReference, text, image);
+                    scriptureLibrary.Add(newScripture);
+                }
             }
         }
     }
