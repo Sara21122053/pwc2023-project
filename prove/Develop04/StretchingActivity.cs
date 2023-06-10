@@ -10,7 +10,7 @@ public class StretchingActivity : Activity
         "back stretch (sitting or standing stretch until you touch your feet without bending your knees)",
         "arm stretch (interlace fingers and raise arms overhead)",
         "foot stretch (stand on tiptoe and lower)",
-        "eg stretch (kneeling, extend one leg and apply a little pressure, then repeat with the other leg)."
+        "leg stretch (kneeling, extend one leg and apply a little pressure, then repeat with the other leg)."
     };
 
     public StretchingActivity() : base("Stretching Activity", "This activity will help you relax your body and clear your mind. Do each exercise calmly")
