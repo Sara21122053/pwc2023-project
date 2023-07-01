@@ -2,15 +2,25 @@ using System;
 
 public class Word
 {
-    private string _Text;
-    private bool _Hide;
+    private string _text;
+    private bool _isHidden;
 
-    public Word (string text)
+    public Word(string text)
     {
-        _Text = text;
-        _Hide = false;
+        _text = text;
+        _isHidden = false;
     }
 
-    public string Text {get {return _Text;}}
-    public bool Hide {get {return _Hide;} set {_Hide = value;}}
+    public string text {get {return _text;}}
+    public bool isHidden {get {return _isHidden;}}
+
+    public void Hide()
+    {
+        _isHidden = true;
+    }
+
+    public void Display()
+    {
+        _isHidden = false;
+    }
 }
