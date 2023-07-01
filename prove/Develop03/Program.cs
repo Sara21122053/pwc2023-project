@@ -4,21 +4,22 @@ using System.IO;
 
 class Program
 {
-    private static List<Scripture> scriptureLibrary = new List<Scripture>();
-    private static Random random = new Random();
-    static void Main(string[] args)
-    {
+   private static List<Scripture> scriptureLibrary = new List<Scripture>();
+   private static Random random = new Random();
+   
+   static void Main(string[] args)
+   {
         LoadScriptsFromFile("Scriptures.txt");
 
         Console.WriteLine("Welcome to the Scripture Memorizer");
-        
+
         while (true)
         {
             Console.Clear();
-            Console.WriteLine("What would you like to do?\n 1.Display an existing script\n 2.Load new scrip\n 3.Load script from file\n 4.Quit");
-            string options = Console.ReadLine();
+            Console.WriteLine("What would you like to do?\n 1. Display an existing scripture\n 2. Load new scripture\n 3. Load scripture from file\n 4. Quit");
+            string option = Console.ReadLine();
 
-            switch (options)
+            switch (option)
             {
                 case "1":
                     DisplayAnExistingScripture();
@@ -45,13 +46,6 @@ class Program
         
         string filePath = "Scriptures.txt";
         
-        if (!File.Exists(filePath))
-        {
-            Console.WriteLine("The Scriptures file does not exist. Press any key to continue.");
-            Console.ReadKey();
-            return;
-        }
-        
         string[] lines = File.ReadAllLines(filePath);
         
         if (lines.Length == 0)
@@ -61,7 +55,7 @@ class Program
             return;
         }
         
-        Random random = new Random();
+        
         int randomIndex = random.Next(lines.Length);
         string scriptureLine = lines[randomIndex];
         
@@ -74,14 +68,24 @@ class Program
             string image = data[2];
             
             string[] referenceParts = reference.Split(' ');
-            
             string book = referenceParts[0];
-            string[] chapterVerseParts = referenceParts[1].Split(':');
+            string chapterVerse = referenceParts[1];
+            
+            string[] chapterVerseParts = chapterVerse.Split(':');
             int chapter = int.Parse(chapterVerseParts[0]);
-
-            string[] verseParts = chapterVerseParts[1].Split('-');
-            int initialVerse = int.Parse(verseParts[0]);
-            int finalVerse = verseParts.Length > 1 ? int.Parse(verseParts[1]) : 0;
+            int initialVerse = 0;
+            int finalVerse = 0;
+            
+            if (chapterVerseParts.Length > 1)
+            {
+                string[] verseParts = chapterVerseParts[1].Split('-');
+                initialVerse = int.Parse(verseParts[0]);
+                
+                if (verseParts.Length > 1)
+                {
+                    finalVerse = int.Parse(verseParts[1]);
+                }
+            }
             
             Reference scriptureReference = new Reference(book, chapter, initialVerse, finalVerse);
             Scripture scripture = new Scripture(scriptureReference, text, image);
@@ -95,8 +99,10 @@ class Program
             
             if (option.ToLower() == "quit")
                 return;
-            
-            HideWords(scripture);
+            else
+            {
+                scripture.HideWords();  
+            }
         }
     }
 
@@ -106,20 +112,18 @@ class Program
         Console.WriteLine("Enter the book:");
         string book = Console.ReadLine();
 
-        Console.WriteLine("Enter the chaper:");
-        string chap = Console.ReadLine();
-        int chapter = int.Parse(chap);
+        Console.WriteLine("Enter the chapter:");
+        int chapter = int.Parse(Console.ReadLine());
 
         Console.WriteLine("Enter the initial verse:");
-        string iniVer = Console.ReadLine();
-        int initialVerse = int.Parse(iniVer);
+        int initialVerse = int.Parse(Console.ReadLine());
 
         Console.WriteLine("Enter the final verse (leave empty if there is only one verse):");
-        string finVer = Console.ReadLine();
-        int finalVerse = 0;
-        if (!string.IsNullOrEmpty(finVer))
+        string finalVerseStr = Console.ReadLine();
+        int? finalVerse = null;
+        if (!string.IsNullOrEmpty(finalVerseStr))
         {
-            finalVerse = int.Parse(finVer);
+            finalVerse = int.Parse(finalVerseStr);
         }
 
         Console.WriteLine("Enter the text:");
@@ -134,10 +138,10 @@ class Program
 
         SaveScriptureToFile(newScripture);
 
-        Console.WriteLine("Scripture added successfuly. Press any key to continue");
+        Console.WriteLine("Scripture added successfully. Press any key to continue");
         Console.ReadKey();
     }
-    
+
     static void SaveScriptureToFile(Scripture scripture)
     {
         string filePath = "Scriptures.txt";
@@ -145,56 +149,10 @@ class Program
         using (StreamWriter writer = new StreamWriter(filePath, true))
         {
             string referenceString = scripture.Reference.ToString();
-            string[] referenceParts = referenceString.Split(' ');
-            
-            string book = referenceParts[0];
-            int chapter = int.Parse(referenceParts[1].Replace(":", ""));
-            int initialVerse = int.Parse(referenceParts[2]);
-            int finalVerse = referenceParts.Length >= 5 ? int.Parse(referenceParts[4]) : 0;
+            string formattedReference = referenceString.Replace(":", "");
 
-            string formattedReference = finalVerse != 0 ? $"{book} {chapter}:{initialVerse}-{finalVerse}" : $"{book} {chapter}:{initialVerse}";
             writer.WriteLine($"{formattedReference}|{scripture.Text}|{scripture.Image}");
         }
-    }
-
-    static void HideWords(Scripture scripture)
-    {
-        List<int> hiddenWords = new List<int>();
-        List<string> words = new List<string>(scripture.Text.Split(' '));
-
-        while (hiddenWords.Count < words.Count)
-        {
-            Console.Clear();
-            Console.WriteLine(scripture.Reference);
-            
-            for (int i = 0; i < words.Count; i++)
-            {
-                if (hiddenWords.Contains(i))
-                    Console.Write("*****");
-                else
-                    Console.Write(words[i] + " ");
-            }
-
-            Console.WriteLine("\nPress Enter to hide more words or press any key to quit.");
-            ConsoleKeyInfo keyInfo = Console.ReadKey();
-            
-            if(keyInfo.Key == ConsoleKey.Enter)
-            {
-                int wordIndex = random.Next(words.Count);
-
-                while (hiddenWords.Contains(wordIndex))
-                   wordIndex = random.Next(words.Count);
-
-                hiddenWords.Add(wordIndex);
-            }
-            else
-            {
-                break;
-            }
-        }
-
-        Console.WriteLine("\nPress any key to continue");
-        Console.ReadKey();
     }
 
     static void LoadScriptureFromFile()
@@ -203,7 +161,7 @@ class Program
         Console.WriteLine("Enter the file path:");
         string filePath = Console.ReadLine();
 
-        if(!File.Exists(filePath))
+        if (!File.Exists(filePath))
         {
             Console.WriteLine("File not found. Press any key to continue.");
             Console.ReadKey();
@@ -219,33 +177,46 @@ class Program
     static void LoadScriptsFromFile(string filePath)
     {
         string[] lines = File.ReadAllLines(filePath);
-
+        
         foreach (string line in lines)
         {
             string[] data = line.Split('|');
-
+            
             if (data.Length == 3)
             {
                 string reference = data[0];
                 string text = data[1];
                 string image = data[2];
-
-                string[] referenceParts = reference.Split(' ');
-                if (referenceParts.Length >= 3)
+                
+                string[] referenceParts = reference.Split(':');
+                if (referenceParts.Length >= 2)
                 {
-                    string book = referenceParts[0];
-                    int chapter = int.Parse(referenceParts[1].Replace(":",""));
-                    int initialVerse = int.Parse(referenceParts[2]);
-                    
+                    string bookChapter = referenceParts[0];
+                    int initialVerse = 0;
                     int finalVerse = 0;
-                    if (referenceParts.Length >= 5)
+                    
+                    string[] bookChapterParts = bookChapter.Split(' ');
+                    if (bookChapterParts.Length >= 2)
                     {
-                        finalVerse = int.Parse(referenceParts[4]);
+                        string book = bookChapterParts[0];
+                        int chapter = int.Parse(bookChapterParts[1]);
+                        
+                        string verseRange = referenceParts[1];
+                        string[] verseRangeParts = verseRange.Split('-');
+                        if (verseRangeParts.Length >= 1)
+                        {
+                            initialVerse = int.Parse(verseRangeParts[0]);
+                            
+                            if (verseRangeParts.Length >= 2)
+                            {
+                                finalVerse = int.Parse(verseRangeParts[1]);
+                            }
+                        }
+                        
+                        Reference newReference = new Reference(book, chapter, initialVerse, finalVerse);
+                        Scripture newScripture = new Scripture(newReference, text, image);
+                        scriptureLibrary.Add(newScripture);
                     }
-
-                    Reference newReference = new Reference(book, chapter, initialVerse, finalVerse);
-                    Scripture newScripture = new Scripture(newReference, text, image);
-                    scriptureLibrary.Add(newScripture);
                 }
             }
         }
