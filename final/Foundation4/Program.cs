@@ -1,10 +1,4 @@
 using System;
-
-class Program
-{
-    static void Main(string[] args)
-    {
-        using System;
 using System.Collections.Generic;
 
 class Program
@@ -27,7 +21,5 @@ class Program
             string summary = activity.GetSummary();
             Console.WriteLine(summary);
         }
-    }
-}
     }
 }
