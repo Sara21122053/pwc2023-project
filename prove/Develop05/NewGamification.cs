@@ -1,28 +1,59 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
-public class NewGamification : Activity
+public class SimpleGoal : Goal
 {
-    private string _name;
-    private int _pointsPerRegister;
-    private int _pointsPerLevel;
+    protected int _level;
+    protected int _pointsNecessaryByLevel;
 
-    public NewGamification(string name, int pointsPerRegister, int pointsPerLevel)
+    public int Level
     {
-        this._name = name;
-        this._pointsPerRegister = pointsPerRegister;
-        this._pointsPerLevel = pointsPerLevel;
+        get {return _level;}
+        set {_level = value;}
+    }
+    public int PointsNecessaryByLevel
+    {
+        get {return _pointsNecessaryByLevel;}
+        set {_pointsNecessaryByLevel = value;}
     }
 
-    public override void RegisterActivity()
+    public SimpleGoal(string name, string description, int pointsForEachCompletion, int pointsNecessaryByLevel)
     {
-        _points += _pointsPerRegister;
+        _name = name;
+        _description = description;
+        _pointsForEachCompletion = pointsForEachCompletion;
+        _pointsNecessaryByLevel = pointsNecessaryByLevel;
+        _level = 1;
+        _completed = false;
+        _pointsEarned = 0;
+    }
 
-        if (_points >= _pointsPerLevel)
+    public override void CompleteGoal()
+    {
+        if (!_completed)
         {
-            _level++;
-            _points = 0;
+            base.CompleteGoal();
+            
+            if (_pointsEarned >= _pointsNecessaryByLevel)
+            {
+                _level++;
+                _pointsEarned = _pointsEarned - (_level - 1) * _pointsNecessaryByLevel;
+                _completed = true;
+            }
         }
+    }
+
+    public override void SaveGoal(StreamWriter writer)
+    {
+        base.SaveGoal(writer);
+        writer.WriteLine("Level: " + _level);
+        writer.WriteLine("Points Necessary By Level: " + _pointsNecessaryByLevel);
+    }
+
+    public override void DisplayProgress()
+    {
+        Console.WriteLine((_completed ? "[x]" : "[ ]") + _name + " (" + _description + ") - Level: " + _level);
     }
 }
