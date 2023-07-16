@@ -1,163 +1,424 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
+using System.Linq;
 
 class Program
 {
-    private static List<Activity> gamifications;
-    private static Activity gamificationSelected = null;
+    private static List<Goal> goals;
+    private static string fileName = string.Empty;
+    private static int totalPointsEarned = 0;
+    
     public static void Main(string[] args)
     {
-        gamifications = new List<Activity>
-        {
-            new ReadScriptures(),
-            new MakePrayer(),
-            new Sacrament(),
-            new HomeEvening(),
-            new GoTemple()
-        };
-        
+        goals = new List<Goal>();
+
         int option;
-        int score = 0;
 
         do
         {
-            Console.WriteLine("Welcome to Eternal Quest!");
+            UpdateTotalPointsEarned();
 
-            Console.WriteLine("Select an option\n 1.View score\n 2.View register score\n 3.Create a new gamification\n 4.Register objetive\n 5.Play\n 6.Exit\n");
+            Console.WriteLine("Select an option:\n 1.Create New Goal\n 2.List Goals\n 3.Save Goals\n 4.Load Goals\n 5.Record Event\n 6.Quit");
+
             option = int.Parse(Console.ReadLine());
 
             switch (option)
             {
                 case 1:
-                    Console.WriteLine("Your current score is:" + score);
+                    CreateNewGoal();
                     Console.WriteLine();
                     break;
                 case 2:
-                    ShowRegisterScore();
+                    ListGoals();
                     Console.WriteLine();
                     break;
                 case 3:
-                    CreateGamification();
+                    SaveGoals();
                     Console.WriteLine();
                     break;
                 case 4:
-                    RegisterObjetive();
+                    LoadGoals();
                     Console.WriteLine();
                     break;
                 case 5:
-                    PlayActivities();
+                    RecordEvent();
                     Console.WriteLine();
                     break;
                 case 6:
-                    Console.WriteLine("Thanks for playing Eternal Quest! See you later!");
+                    Console.WriteLine("Thanks for using the goal tracker. Goodbye!");
                     break;
                 default:
                     Console.WriteLine("Invalid option. Please select a valid option.");
                     Console.WriteLine();
                     break;
             }
-        }while (option != 6);
+        } while (option != 6);
     }
 
-    private static void ShowRegisterScore()
+    private static void CreateNewGoal()
     {
-        string registerFile = "Register.txt";
+        Console.WriteLine("Select a goal type:\n 1.Simple Goal\n 2.Eternal Goal\n 3.Checklist Goal");
 
-        if (File.Exists(registerFile))
+        int option = int.Parse(Console.ReadLine());
+        
+        Console.WriteLine("Enter the name of the goal:");
+        string name = Console.ReadLine();
+
+        Console.WriteLine("Enter the description of the goal:");
+        string description = Console.ReadLine();
+
+        Console.WriteLine("Enter the points for each completation of the goal:");
+        int pointsForEachCompletion = int.Parse(Console.ReadLine());
+
+        switch (option)
         {
-            string[] registrations = File.ReadAllLines(registerFile);
+            case 1:
+                Console.WriteLine("Enter the points neccesary to level up");
+                int pointsNecessaryByLevel = int.Parse(Console.ReadLine());
+                SimpleGoal simpleGoal = new SimpleGoal(name, description, pointsForEachCompletion, pointsNecessaryByLevel);
+                goals.Add(simpleGoal);
+                Console.WriteLine($"The simple goal '{name}' has been created.");
+                break;
+            case 2:
+                Console.WriteLine("Enter the points neccesary to level up");
+                int pointsNecessaryByLevel2 = int.Parse(Console.ReadLine());
+                EternalGoal eternalGoal = new EternalGoal(name, description, pointsForEachCompletion, pointsNecessaryByLevel2);
+                goals.Add(eternalGoal);
+                Console.WriteLine($"The eternal goal '{name}' has been created.");
+                break;
+            case 3:
+                Console.WriteLine("Enter the number of times to complete the goal:");
+                int numberOfTimesToComplete = int.Parse(Console.ReadLine());
 
-            if (registrations.Length > 0)
+                Console.WriteLine("Enter the completetion bonus");
+                int completionBonus = int.Parse(Console.ReadLine());
+
+                Console.WriteLine("Enter the number of times needed to complete the goal:");
+                int numberNeddedForCompletion = int.Parse(Console.ReadLine());
+
+                ChecklistGoal checklistGoal = new ChecklistGoal(name, description, pointsForEachCompletion,numberOfTimesToComplete, 0, completionBonus, numberNeddedForCompletion);
+                goals.Add(checklistGoal);
+                Console.WriteLine($"The checklist goal '{name}' has been created.");
+                break;
+            default:
+                Console.WriteLine("Invalid option. The goal could not be created.");
+                break;
+        }
+    }
+
+    private static void ListGoals()
+    {
+        if (goals.Count > 0)
+        {
+            Console.WriteLine("List of Goals:");
+
+            foreach (Goal goal in goals)
             {
-                Console.WriteLine("Recording of scores:");
+                Console.WriteLine();
+                goal.DisplayProgress();
+                Console.WriteLine();
+            }
+        }
+        else
+        {
+            Console.WriteLine("No goals available. Create a new goal to get started.");
+        }
 
-                foreach (string register in registrations)
+        int totalPointsEarned = goals.Sum(goal => goal.PointsEarned);
+        Console.WriteLine($"You have {totalPointsEarned} points.");
+    }
+
+    private static string SaveGoals()
+    {
+        if (goals.Count > 0)
+        {
+            Console.WriteLine("Enter the file name to save the goals:");
+            fileName = Console.ReadLine();
+
+            using (StreamWriter writer = new StreamWriter(fileName, true))
+            {
+                foreach (Goal goal in goals)
                 {
-                    Console.WriteLine(register);
+                    goal.SaveGoal(writer);
+                    writer.WriteLine("#");
                 }
+            }
+            Console.WriteLine("Goals saved succesfully");
+            return fileName;
+        }
+        else
+        {
+            Console.WriteLine("No goals avaible to save.");
+            return null;
+        }
+    }
+
+    private static void LoadGoals()
+    {
+        Console.WriteLine("Enter the name of the file to load the goals:");
+        fileName = Console.ReadLine();
+
+        if (File.Exists(fileName))
+        {
+            List<Goal> loadedGoals = new List<Goal>(); 
+            
+            using (StreamReader reader = new StreamReader(fileName))
+            {
+                string line;
+                Goal currentGoal = null;
+                
+                while ((line = reader.ReadLine()) != null)
+                {
+                    if (line.StartsWith("Type:"))
+                    {
+                        string goalType = line.Substring("Type:".Length).Trim();
+                        
+                        if (goalType == typeof(SimpleGoal).Name)
+                        {
+                            currentGoal = new SimpleGoal("", "", 0, 0);
+                        }
+                        else if (goalType == typeof(EternalGoal).Name)
+                        {
+                            currentGoal = new EternalGoal("", "", 0, 0);
+                        }
+                        else if (goalType == typeof(ChecklistGoal).Name)
+                        {
+                            currentGoal = new ChecklistGoal("", "", 0, 0, 0, 0, 0);
+                        }
+                        else
+                        {
+                            Console.WriteLine("Invalid goal type. Skipping goal.");
+                            currentGoal = null;
+                        }
+                    }
+                    else if (line == "#")
+                    {
+                        if (currentGoal != null)
+                        {
+                            loadedGoals.Add(currentGoal);
+                            currentGoal = null;
+                        } 
+                    }
+                    else if (currentGoal != null)
+                    {
+                        string[] parts = line.Split(':');
+                        string propertyName = parts[0].Trim();
+                        string propertyValue = parts[1].Trim();
+                        
+                        switch (propertyName)
+                        {
+                            case "Name":
+                                currentGoal.Name = propertyValue;
+                                break;
+                            case "Description":
+                                currentGoal.Description = propertyValue;
+                                break;
+                            case "Completed":
+                                currentGoal.Completed = bool.Parse(propertyValue);
+                                break;
+                            case "Points For Each Completion":
+                                currentGoal.PointsForEachCompletion = int.Parse(propertyValue);
+                                break;
+                            case "Points Earned":
+                                currentGoal.PointsEarned = int.Parse(propertyValue);
+                                break;
+                            case "Level":
+                                if (currentGoal is SimpleGoal simpleGoal)
+                                {
+                                    simpleGoal.Level = int.Parse(propertyValue);
+                                }
+                                else if (currentGoal is EternalGoal eternalGoal)
+                                {
+                                    eternalGoal.Level = int.Parse(propertyValue);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Invalid goal type. Skipping goal.");
+                                    currentGoal = null;
+                                }
+                                break;
+                            case "Points Necessary By Level":
+                                if (currentGoal is SimpleGoal simpleGoal2)
+                                {
+                                    simpleGoal2.PointsNecessaryByLevel = int.Parse(propertyValue);
+                                }
+                                else if (currentGoal is EternalGoal eternalGoal2)
+                                {
+                                    eternalGoal2.PointsNecessaryByLevel = int.Parse(propertyValue);
+                                }
+                                else
+                                {
+                                    Console.WriteLine("Invalid goal type. Skipping goal.");
+                                    currentGoal = null;
+                                }
+                                break;
+                            case "Number Of Times To Complete":
+                                if (currentGoal is ChecklistGoal checklistGoal)
+                                {
+                                    checklistGoal.NumberOfTimesToComplete = int.Parse(propertyValue);
+                                }
+                                break;
+                            case "Number Of Times Done":
+                                if (currentGoal is ChecklistGoal checklistGoal2)
+                                {
+                                    checklistGoal2.NumberOfTimesDone = int.Parse(propertyValue);
+                                }
+                                break;
+                            case "Completion Bonus":
+                                if (currentGoal is ChecklistGoal checklistGoal3)
+                                {
+                                    checklistGoal3.CompletionBonus = int.Parse(propertyValue);
+                                }
+                                break;
+                            case "Number Nedded For Completion":
+                                if(currentGoal is ChecklistGoal checklistGoal4)
+                                {
+                                    checklistGoal4.NumberNeddedForCompletion = int.Parse(propertyValue);
+                                }
+                                break;
+                            default:
+                                Console.WriteLine("Invalid property name. Skipping property.");
+                                break;
+                        }
+                    }
+                }
+            }
+            
+            goals = loadedGoals;
+            UpdateTotalPointsEarned();
+            
+            Console.WriteLine("Goals loaded successfully!");
+        }
+        else
+        {
+            Console.WriteLine("File not found. Loading goals canceled.");
+        }
+    }
+
+    private static void RecordEvent()
+    {
+        Console.WriteLine("Select the goal to record an event:");
+
+        for (int i = 0; i < goals.Count; i++)
+        {
+            Console.WriteLine($"{i + 1}. {goals[i].Name}");
+        }
+
+        int index;
+        bool validSelection = false;
+
+        do
+        {
+            Console.WriteLine("Enter the index of the goal: ");
+            string input = Console.ReadLine();
+
+            if (int.TryParse(input, out index) && index >= 1 && index <= goals.Count)
+            {
+                validSelection = true;
+                index--;
             }
             else
             {
-                Console.WriteLine("No registrations are available. All data are zero.");
+                Console.WriteLine("Invalid selection. Please enter a valid index.");
             }
+        }while (!validSelection);
+
+        goals[index].CompleteGoal();
+        UpdateTotalPointsEarned();
+        Console.WriteLine("Event recorded successfully.");
+        Console.WriteLine($"Congratulations! You have earned {goals[index].PointsForEachCompletion} points.");
+
+        if (!string.IsNullOrEmpty(fileName))
+        {
+            UpdateGoalInFile(index, fileName);
+            Console.WriteLine("Event recorded and goals saved successfully.");
         }
         else
         {
-            Console.WriteLine("No registrations are available. All data are zero.");
+            Console.WriteLine("File name is null or empty. Event recorded, but goals not saved.");
         }
-    }
-
-    private static void CreateGamification()
-    {
-        Console.WriteLine("Enter the name of the new gamification:");
-        string gamificationName = Console.ReadLine();
-
-        Console.WriteLine("Enter the number of points earned for each register objetive:");
-        int pointsPerRegister = int.Parse(Console.ReadLine());
-        bool validNumber = int.TryParse(Console.ReadLine(), out pointsPerRegister);
-
-        Console.WriteLine("Enter the amount of points needed to level up:");
-        int pointsPerLevel = int.Parse(Console.ReadLine());
-        bool validNumber2 = int.TryParse(Console.ReadLine(), out pointsPerLevel);
-
-        if (validNumber && validNumber2)
-        {
-            Activity newGamification = new NewGamification(gamificationName, pointsPerRegister, pointsPerLevel);
-            gamifications.Add(newGamification);
-            gamificationSelected = newGamification;
-            
-            Console.WriteLine($"The gamification '{gamificationName}' has been successfully created.");
-        }
-        else
-        {
-            Console.WriteLine("Invalid entry. The gamification could not be created.");
-        }
-    }
-
-    private static void RegisterObjetive()
-    {
-        Console.WriteLine("Select the gamification in which you want to register the objetive:");
         
-        for (int i = 0; i < gamifications.Count; i++)
+        if (goals[index] is ChecklistGoal checklistGoal)
         {
-            Console.WriteLine($"{i + 1}. {gamifications[i]}");
-        }
+            checklistGoal.NumberOfTimesDone++;
 
-        Console.WriteLine("Enter the number corresponding to the gamification:");
-        int option;
-        bool validNumber = int.TryParse(Console.ReadLine(), out option);
-
-        if (validNumber && option >= 1 && option <= gamifications.Count)
-        {
-            Activity gamification = gamifications[option - 1];
-            gamification.RegisterActivity();
-            
-            string register = $"{DateTime.Now}: {gamification} - Level: {gamification._level} - Points: {gamification._points}";
-            string registerFile = "Register.txt";
-            using (StreamWriter sw = File.AppendText(registerFile))
+            if (checklistGoal.NumberOfTimesDone >= checklistGoal.NumberNeddedForCompletion)
             {
-                sw.WriteLine(register);
+                checklistGoal.PointsEarned += checklistGoal.CompletionBonus;
+                Console.WriteLine($"Congratulations! You have earned {checklistGoal.PointsForEachCompletion} points and a completion bonus of {checklistGoal.CompletionBonus} points.");
             }
 
-            Console.WriteLine("Successfully register objective!");
+            if (checklistGoal.NumberOfTimesDone >= checklistGoal.NumberOfTimesToComplete)
+            {
+                checklistGoal.Completed = true;
+            }
+        }
+
+        if (goals[index] is SimpleGoal simpleGoal)
+        {
+            simpleGoal.CompleteGoal();
+            
+            if (simpleGoal.Level > 1)
+            {
+                Console.WriteLine($"You have leveled up to level {simpleGoal.Level}!");
+            }
+        }
+        
+        if (goals[index] is EternalGoal eternalGoal)
+        {
+            eternalGoal.CompleteGoal();
+            
+            if (eternalGoal.Level > 1)
+            {
+                Console.WriteLine($"You have leveled up to level {eternalGoal.Level}!");
+            }
+        }
+        
+        UpdateTotalPointsEarned();
+    }
+
+    private static void UpdateGoalInFile(int index, string fileName)
+    {
+        if (goals.Count > 0 && index >= 0 && index < goals.Count)
+        {
+            using (StreamWriter writer = new StreamWriter(fileName, false))
+            {
+                foreach (Goal goal in goals)
+                {
+                    if (goal == goals[index])
+                    {
+                        goal.Completed = true;
+                        goal.CompleteGoal();
+                    }
+                    goal.SaveGoal(writer);
+                    writer.WriteLine("#");
+                }
+            }
+            Console.WriteLine("Goal updated in the file successfully.");
         }
         else
         {
-            Console.WriteLine("Invalid option. Please select a valid option.");
+            Console.WriteLine("Invalid goal index. Goal update failed.");
         }
     }
 
-    private static void PlayActivities()
+    private static void SaveGoalsToFile(string fileName)
     {
-        Console.WriteLine("Activities:");
-        foreach (Activity gamification in gamifications)
+        using (StreamWriter writer = new StreamWriter(fileName, false))
         {
-            Console.WriteLine(gamification.GetType().Name);
-            Console.WriteLine("Level:" + gamification._level);
-            Console.WriteLine("Points:" + gamification._points);
-            Console.WriteLine("Points needed to level up:" + gamification._pointsNeccesaryByLevel);
-            Console.WriteLine();
+            foreach (Goal goal in goals)
+            {
+                goal.SaveGoal(writer);
+                writer.WriteLine("#");
+            }
         }
+    }
+
+    private static void UpdateTotalPointsEarned()
+    {
+        totalPointsEarned = goals.Sum(goal => goal.PointsEarned);
+        Console.WriteLine($"You have {totalPointsEarned} points.");
+        Console.WriteLine();
     }
 }
