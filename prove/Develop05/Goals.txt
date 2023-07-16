@@ -1,0 +1,29 @@
+Type: SimpleGoal
+Name: Hymn
+Description: Learn a hymn you like
+Completed: True
+Points For Each Completion: 25
+Points Earned: 25
+Level: 1
+Points Necessary By Level: 100
+#
+Type: EternalGoal
+Name: Indexing
+Description: Record data for the genealogical work
+Completed: True
+Points For Each Completion: 15
+Points Earned: 15
+Level: 1
+Points Necessary By Level: 150
+#
+Type: ChecklistGoal
+Name: Evening Home
+Description: Have a spiritual and fun moment with family and/or friends
+Completed: False
+Points For Each Completion: 50
+Points Earned: 0
+Number Of Times To Complete: 4
+Number Of Times Done: 0
+Completion Bonus: 10
+Number Nedded For Completion: 2
+#
