@@ -2,14 +2,16 @@ using System;
 
 class Event
 {
-    private string _title;
-    private string _description;
-    private DateTime _date;
-    private TimeSpan _time;
-    private string _address;
+    protected string _type;
+    protected string _title;
+    protected string _description;
+    protected DateTime _date;
+    protected TimeSpan _time;
+    protected string _address;
 
-    public Event(string title, string description, DateTime date, TimeSpan time, string address)
+    public Event(string type, string title, string description, DateTime date, TimeSpan time, string address)
     {
+        this._type = type;
         this._title = title;
         this._description = description;
         this._date = date;
@@ -17,18 +19,18 @@ class Event
         this._address = address;
     }
 
-    public virtual string GetStadartDetails()
+    public virtual string GetStandardDetails()
     {
         return $"Title: {_title}\nDescription: {_description}\ndate: {_date.ToShortDateString()}\nTime: {_time.ToString()}\nAddress: {_address.ToString()}";
     }
 
     public virtual string GetFullDetails()
     {
-        return GetStadartDetails();
+        return GetStandardDetails();
     }
 
     public virtual string GetShortDescription()
     {
-        return $"Type: Event\nTitle: {_title}\nDate: {_date.ToShortDateString()}";
+        return $"Type: {_type}\nTitle: {_title}\nDate: {_date.ToShortDateString()}";
     }
 }
