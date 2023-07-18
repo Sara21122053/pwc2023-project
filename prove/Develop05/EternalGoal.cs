@@ -32,15 +32,13 @@ public class EternalGoal : Goal
 
     public override void CompleteGoal()
     {
-        if (!_completed)
+        _completed = false;
+        _pointsEarned += _pointsForEachCompletion;
+        
+        while (_pointsEarned >= _pointsNecessaryByLevel)
         {
-            base.CompleteGoal();
-            if (_pointsEarned >= _pointsNecessaryByLevel)
-            {
-                _level++;
-                _pointsEarned = _pointsEarned - (_level - 1) * _pointsNecessaryByLevel;
-                _completed = true;
-            }
+            _level++;
+            _pointsEarned -= _pointsNecessaryByLevel;
         }
     }
 
