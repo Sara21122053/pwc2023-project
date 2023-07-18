@@ -124,19 +124,16 @@ class Program
         {
             Console.WriteLine("No goals available. Create a new goal to get started.");
         }
-
-        int totalPointsEarned = goals.Sum(goal => goal.PointsEarned);
-        Console.WriteLine($"You have {totalPointsEarned} points.");
     }
 
-    private static string SaveGoals()
+    private static void SaveGoals()
     {
         if (goals.Count > 0)
         {
             Console.WriteLine("Enter the file name to save the goals:");
             fileName = Console.ReadLine();
 
-            using (StreamWriter writer = new StreamWriter(fileName, true))
+            using (StreamWriter writer = new StreamWriter(fileName, false))
             {
                 foreach (Goal goal in goals)
                 {
@@ -145,12 +142,10 @@ class Program
                 }
             }
             Console.WriteLine("Goals saved succesfully");
-            return fileName;
         }
         else
         {
             Console.WriteLine("No goals avaible to save.");
-            return null;
         }
     }
 
@@ -174,22 +169,21 @@ class Program
                     {
                         string goalType = line.Substring("Type:".Length).Trim();
                         
-                        if (goalType == typeof(SimpleGoal).Name)
+                        switch (goalType)
                         {
-                            currentGoal = new SimpleGoal("", "", 0, 0);
-                        }
-                        else if (goalType == typeof(EternalGoal).Name)
-                        {
-                            currentGoal = new EternalGoal("", "", 0, 0);
-                        }
-                        else if (goalType == typeof(ChecklistGoal).Name)
-                        {
-                            currentGoal = new ChecklistGoal("", "", 0, 0, 0, 0, 0);
-                        }
-                        else
-                        {
-                            Console.WriteLine("Invalid goal type. Skipping goal.");
-                            currentGoal = null;
+                            case nameof(SimpleGoal):
+                                currentGoal = new SimpleGoal("", "", 0, 0);
+                                break;
+                            case nameof(EternalGoal):
+                                currentGoal = new EternalGoal("", "", 0, 0);
+                                break;
+                            case nameof(ChecklistGoal):
+                                currentGoal = new ChecklistGoal("", "", 0, 0, 0, 0, 0);
+                                break;
+                            default:
+                                Console.WriteLine("Invalid goal type. Skipping goal.");
+                                currentGoal = null;
+                                break;
                         }
                     }
                     else if (line == "#")
@@ -286,7 +280,6 @@ class Program
             }
             
             goals = loadedGoals;
-            UpdateTotalPointsEarned();
             
             Console.WriteLine("Goals loaded successfully!");
         }
@@ -324,94 +317,71 @@ class Program
             }
         }while (!validSelection);
 
-        goals[index].CompleteGoal();
-        UpdateTotalPointsEarned();
+        Goal selectedGoal = goals[index];
+        selectedGoal.CompleteGoal();
         Console.WriteLine("Event recorded successfully.");
-        Console.WriteLine($"Congratulations! You have earned {goals[index].PointsForEachCompletion} points.");
+        Console.WriteLine();
+        Console.WriteLine($"Congratulations! You have earned {selectedGoal.PointsForEachCompletion} points.");
 
         if (!string.IsNullOrEmpty(fileName))
         {
-            UpdateGoalInFile(index, fileName);
-            Console.WriteLine("Event recorded and goals saved successfully.");
+            SaveGoalsToFile(fileName);
         }
         else
         {
             Console.WriteLine("File name is null or empty. Event recorded, but goals not saved.");
         }
         
-        if (goals[index] is ChecklistGoal checklistGoal)
-        {
-            checklistGoal.NumberOfTimesDone++;
-
-            if (checklistGoal.NumberOfTimesDone >= checklistGoal.NumberNeddedForCompletion)
-            {
-                checklistGoal.PointsEarned += checklistGoal.CompletionBonus;
-                Console.WriteLine($"Congratulations! You have earned {checklistGoal.PointsForEachCompletion} points and a completion bonus of {checklistGoal.CompletionBonus} points.");
-            }
-
-            if (checklistGoal.NumberOfTimesDone >= checklistGoal.NumberOfTimesToComplete)
-            {
-                checklistGoal.Completed = true;
-            }
-        }
-
-        if (goals[index] is SimpleGoal simpleGoal)
-        {
-            simpleGoal.CompleteGoal();
-            
-            if (simpleGoal.Level > 1)
-            {
-                Console.WriteLine($"You have leveled up to level {simpleGoal.Level}!");
-            }
-        }
-        
-        if (goals[index] is EternalGoal eternalGoal)
-        {
-            eternalGoal.CompleteGoal();
-            
-            if (eternalGoal.Level > 1)
-            {
-                Console.WriteLine($"You have leveled up to level {eternalGoal.Level}!");
-            }
-        }
-        
         UpdateTotalPointsEarned();
     }
 
-    private static void UpdateGoalInFile(int index, string fileName)
+    private static void UpdateGoalInFile(string fileName)
     {
-        if (goals.Count > 0 && index >= 0 && index < goals.Count)
+        if (goals.Count > 0)
+        {
+            List<Goal> updatedGoals = new List<Goal>();
+            
+            using (StreamWriter writer = new StreamWriter(fileName, false))
+            {
+                foreach (Goal goal in goals)
+                {
+                    if (goal.Completed)
+                    {
+                        goal.CompleteGoal();
+                    }
+                    goal.SaveGoal(writer);
+                    writer.WriteLine("#");
+                    updatedGoals.Add(goal);
+                }
+            }
+            
+            goals = updatedGoals;
+            
+            Console.WriteLine("Goal updated in the file successfully.");
+        }
+        else
+        {
+            Console.WriteLine("No goals available to update.");
+        }
+    }
+    private static void SaveGoalsToFile(string fileName)
+    {
+        if (goals.Count > 0)
         {
             using (StreamWriter writer = new StreamWriter(fileName, false))
             {
                 foreach (Goal goal in goals)
                 {
-                    if (goal == goals[index])
-                    {
-                        goal.Completed = true;
-                        goal.CompleteGoal();
-                    }
                     goal.SaveGoal(writer);
                     writer.WriteLine("#");
                 }
             }
-            Console.WriteLine("Goal updated in the file successfully.");
+            
+            Console.WriteLine("Goals saved to file successfully.");
         }
         else
         {
-            Console.WriteLine("Invalid goal index. Goal update failed.");
-        }
-    }
-
-    private static void SaveGoalsToFile(string fileName)
-    {
-        using (StreamWriter writer = new StreamWriter(fileName, false))
-        {
-            foreach (Goal goal in goals)
-            {
-                goal.SaveGoal(writer);
-                writer.WriteLine("#");
-            }
+            Console.WriteLine("No goals available to save.");
         }
     }
 
