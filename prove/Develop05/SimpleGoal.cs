@@ -34,13 +34,18 @@ public class SimpleGoal : Goal
     {
         if (!_completed)
         {
-            base.CompleteGoal();
-            
-            if (_pointsEarned >= _pointsNecessaryByLevel)
+            _completed = true;
+            _pointsEarned += _pointsForEachCompletion;
+        }
+        else if (_completed)
+        {
+            _completed = true;
+            _pointsEarned += _pointsForEachCompletion;
+
+            while(_pointsEarned >= _pointsNecessaryByLevel)
             {
                 _level++;
-                _pointsEarned = _pointsEarned - (_level - 1) * _pointsNecessaryByLevel;
-                _completed = true;
+                _pointsEarned += _pointsNecessaryByLevel;
             }
         }
     }
