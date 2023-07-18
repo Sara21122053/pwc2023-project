@@ -51,21 +51,16 @@ public class ChecklistGoal : Goal
     {
         if (!_completed)
         {
-            base.CompleteGoal();
+            _numberOfTimesDone++;                
+            _pointsEarned += _pointsForEachCompletion;                
+            
             if (_numberOfTimesDone == _numberNeddedForCompletion)
             {
-                _completed = true;
-                _pointsEarned = _numberOfTimesDone * _pointsForEachCompletion + _completionBonus;
+                _pointsEarned += _completionBonus;
             }
-            else if (_numberOfTimesDone >= _numberOfTimesToComplete)
-            {
-                _completed = true;
-                _pointsEarned = _numberOfTimesToComplete * _pointsForEachCompletion;
-            }
-            else
-            {
-                _completed = false;
-                _pointsEarned = _numberOfTimesDone * _pointsForEachCompletion;
+            else if (_numberOfTimesDone == _numberOfTimesToComplete)                
+            {                    
+                _completed = true;                                   
             }
         }
     }
